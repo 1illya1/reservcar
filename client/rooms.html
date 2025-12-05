@@ -60,6 +60,53 @@
             <!-- Розділ IoT контролю -->
             <section id="iotControlSection" class="section">
                 <h2>🔐 IoT Контроль Доступу</h2>
+
+                <!-- Кнопка додавання пристрою -->
+                <div style="margin-bottom: 20px;">
+                    <button id="addDeviceBtn" class="submit-btn" onclick="toggleAddDeviceForm()">
+                        ➕ Додати Замок
+                    </button>
+                </div>
+
+                <!-- Форма додавання пристрою -->
+                <div id="addDeviceForm" class="add-device-form" style="display: none;">
+                    <h3>Додати Розумний Замок</h3>
+                    <div class="form-group">
+                        <label for="deviceId">ID Пристрою:</label>
+                        <input type="text" id="deviceId" placeholder="LOCK_001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="deviceRoom">Приміщення:</label>
+                        <select id="deviceRoom" required>
+                            <option value="">Оберіть приміщення...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deviceManufacturer">Виробник:</label>
+                        <select id="deviceManufacturer">
+                            <option value="August Smart Lock">August Smart Lock</option>
+                            <option value="Yale Assure">Yale Assure</option>
+                            <option value="TTLock">TTLock</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deviceConnection">Тип зв'язку:</label>
+                        <select id="deviceConnection">
+                            <option value="wifi">WiFi</option>
+                            <option value="bluetooth">Bluetooth</option>
+                            <option value="mqtt">MQTT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deviceMac">MAC Address:</label>
+                        <input type="text" id="deviceMac" placeholder="AA:BB:CC:DD:EE:FF">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="submit-btn" onclick="addDevice()">Додати</button>
+                        <button type="button" class="control-btn deactivate-btn" onclick="toggleAddDeviceForm()">Скасувати</button>
+                    </div>
+                </div>
+
                 <div class="iot-container">
                     <div class="iot-devices-panel">
                         <h3>Розумні Замки</h3>
