@@ -440,6 +440,84 @@ function handleLogout() {
 
 // ============ IoT КОНТРОЛЬ ============
 
+// Переключення форми додавання пристрою
+function toggleAddDeviceForm() {
+    const form = document.getElementById('addDeviceForm');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        loadRoomsForDeviceSelect();
+    } else {
+        form.style.display = 'none';
+        clearDeviceForm();
+    }
+}
+
+// Завантажити приміщення для select
+async function loadRoomsForDeviceSelect() {
+    try {
+        const response = await fetch(`${API_URL}/rooms/getallrooms`);
+        const rooms = await response.json();
+
+        const select = document.getElementById('deviceRoom');
+        select.innerHTML = '<option value="">Оберіть приміщення...</option>';
+
+        rooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room._id;
+            option.textContent = room.name;
+            select.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Помилка:', error);
+    }
+}
+
+// Очистити форму
+function clearDeviceForm() {
+    document.getElementById('deviceId').value = '';
+    document.getElementById('deviceRoom').value = '';
+    document.getElementById('deviceMac').value = '';
+}
+
+// Додати пристрій
+async function addDevice() {
+    const deviceData = {
+        deviceId: document.getElementById('deviceId').value,
+        deviceType: 'smart_lock',
+        room: document.getElementById('deviceRoom').value,
+        manufacturer: document.getElementById('deviceManufacturer').value,
+        connectionType: document.getElementById('deviceConnection').value,
+        macAddress: document.getElementById('deviceMac').value || undefined,
+        batteryLevel: 100
+    };
+
+    if (!deviceData.deviceId || !deviceData.room) {
+        alert('❌ Заповніть обов\'язкові поля');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/iot/devices/add`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(deviceData)
+        });
+
+        if (response.ok) {
+            alert('✅ Замок успішно додано!');
+            toggleAddDeviceForm();
+            loadIoTDevices();
+        } else {
+            alert('❌ Помилка додавання пристрою');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        alert('❌ Помилка з\'єднання з сервером');
+    }
+}
+
 // Завантаження IoT пристроїв
 async function loadIoTDevices() {
     const devicesList = document.getElementById('devicesList');
@@ -633,3 +711,5 @@ window.openRoomDetails = openRoomDetails;
 window.controlLock = controlLock;
 window.activateAccess = activateAccess;
 window.deactivateAccess = deactivateAccess;
+window.toggleAddDeviceForm = toggleAddDeviceForm;
+window.addDevice = addDevice;

@@ -646,6 +646,19 @@ main {
     font-family: 'Courier New', monospace;
 }
 
+.add-device-form {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border: 2px solid #667eea;
+}
+
+.add-device-form h3 {
+    color: #667eea;
+    margin-bottom: 20px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header-top {
