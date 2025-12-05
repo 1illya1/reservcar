@@ -76,13 +76,23 @@ router.post("/reservroom", async(req, res) => {
 
       if (payment) {
         req.body.transactionId = payment.source.id;
+
+        // Генерація коду доступу
+        const accessCode = Math.floor(100000 + Math.random() * 900000).toString();
+        req.body.accessCode = accessCode;
+        req.body.lockStatus = 'pending';
+
         const newbooking = new RoomReserv(req.body);
         await newbooking.save();
         const room = await Room.findOne({ _id: req.body.room });
         room.bookedTimeSlots.push(req.body.bookedTimeSlots);
 
         await room.save();
-        res.send("Your booking is successfull");
+
+        res.send({
+          message: "Your booking is successfull",
+          accessCode: accessCode
+        });
       } else {
         return res.status(400).json({error: "Payment failed"});
       }
