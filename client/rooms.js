@@ -3,9 +3,12 @@ const API_URL = 'http://localhost:5000/api';
 
 let allRooms = [];
 let selectedRoom = null;
+let currentUser = null;
 
 // Завантаження приміщень при відкритті сторінки
 document.addEventListener('DOMContentLoaded', () => {
+    // Перевірка авторизації
+    checkAuth();
     loadRooms();
     setupEventListeners();
 });
@@ -38,6 +41,9 @@ function setupEventListeners() {
 
     // Підтвердження бронювання
     document.getElementById('confirmBooking').addEventListener('click', handleBooking);
+
+    // Вихід з системи
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 }
 
 // Показати розділ
@@ -296,6 +302,30 @@ async function handleAddRoom(e) {
 async function loadBookings() {
     const bookingsList = document.getElementById('bookingsList');
     bookingsList.innerHTML = '<p class="no-data">Функціонал відображення бронювань буде додано після інтеграції з системою резервацій</p>';
+}
+
+// Перевірка авторизації
+function checkAuth() {
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    if (!user) {
+        // Перенаправити на сторінку логіну
+        window.location.href = '/login.html';
+        return;
+    }
+
+    currentUser = user;
+
+    // Відобразити ім'я користувача
+    document.getElementById('username').textContent = user.username;
+}
+
+// Вихід з системи
+function handleLogout() {
+    if (confirm('Ви впевнені, що хочете вийти?')) {
+        localStorage.removeItem('user');
+        window.location.href = '/login.html';
+    }
 }
 
 // Зробити функцію доступною глобально
