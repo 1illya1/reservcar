@@ -184,6 +184,7 @@ function closeModal() {
     selectedRoom = null;
     document.getElementById('bookingFrom').value = '';
     document.getElementById('bookingTo').value = '';
+    document.getElementById('userName').value = '';
     document.getElementById('userEmail').value = '';
     document.getElementById('totalCost').innerHTML = '';
 }
@@ -213,15 +214,16 @@ function calculateTotalCost() {
     `;
 }
 
-// Обробка бронювання
-async function handleBooking() {
+// Обробка бронювання через Stripe
+function handleBooking() {
     if (!selectedRoom) return;
 
     const from = document.getElementById('bookingFrom').value;
     const to = document.getElementById('bookingTo').value;
+    const userName = document.getElementById('userName').value;
     const email = document.getElementById('userEmail').value;
 
-    if (!from || !to || !email) {
+    if (!from || !to || !userName || !email) {
         alert('Будь ласка, заповніть всі поля');
         return;
     }
@@ -229,15 +231,73 @@ async function handleBooking() {
     const fromDate = new Date(from);
     const toDate = new Date(to);
     const hours = Math.ceil((toDate - fromDate) / (1000 * 60 * 60));
+
+    if (hours <= 0) {
+        alert('Некоректні дати бронювання');
+        return;
+    }
+
     const totalAmount = hours * selectedRoom.rentPerHour;
 
-    // Тут має бути інтеграція з платіжною системою
-    // Поки що просто показуємо повідомлення
-    if (confirm(`Підтвердити бронювання на суму ${totalAmount} грн?`)) {
-        alert('Бронювання підтверджено! В реальній системі тут буде інтеграція з платіжною системою.');
-        closeModal();
-        // В реальному додатку тут буде виклик API для створення бронювання
-    }
+    // Відкрити Stripe Checkout
+    const handler = StripeCheckout.configure({
+        key: 'pk_test_51OrgaHLC2ODdkCFkR8fMBWZeWE7aGvGy8xTJQjfBBEMgfN24tPVXhJJqEMJE4LKjrVcE3Z9k8I5gDxOd2Pnzn9Kp00HBwqYzMO',
+        locale: 'auto',
+        token: async function(token) {
+            // Підготувати дані для бронювання
+            const bookingData = {
+                room: selectedRoom._id,
+                user: currentUser._id,
+                userName: userName,
+                userEmail: email,
+                bookedTimeSlots: {
+                    from: from,
+                    to: to
+                },
+                totalHours: hours,
+                totalAmount: totalAmount,
+                token: token
+            };
+
+            try {
+                // Відправити запит на сервер
+                const response = await fetch(`${API_URL}/rooms/reservroom`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (response.ok) {
+                    alert('✅ Бронювання успішне! Деталі надіслано на ваш email.');
+                    closeModal();
+                    loadRooms(); // Оновити список приміщень
+                } else {
+                    const error = await response.json();
+                    console.error('Помилка бронювання:', error);
+                    alert('❌ Помилка бронювання. Спробуйте ще раз.');
+                }
+            } catch (error) {
+                console.error('Помилка:', error);
+                alert('❌ Помилка з\'єднання з сервером');
+            }
+        }
+    });
+
+    // Відкрити модальне вікно оплати
+    handler.open({
+        name: 'ReservCar - Бронювання',
+        description: `${selectedRoom.name} (${hours} год)`,
+        amount: totalAmount * 100, // В копійках
+        currency: 'UAH',
+        email: email
+    });
+
+    // Закрити Stripe checkout при закритті вікна
+    window.addEventListener('popstate', function() {
+        handler.close();
+    });
 }
 
 // Застосування фільтрів
@@ -301,7 +361,48 @@ async function handleAddRoom(e) {
 // Завантаження бронювань
 async function loadBookings() {
     const bookingsList = document.getElementById('bookingsList');
-    bookingsList.innerHTML = '<p class="no-data">Функціонал відображення бронювань буде додано після інтеграції з системою резервацій</p>';
+    bookingsList.innerHTML = '<div class="loading">Завантаження...</div>';
+
+    try {
+        const response = await fetch(`${API_URL}/rooms/getallroomreservs`);
+        if (!response.ok) throw new Error('Помилка завантаження бронювань');
+
+        const bookings = await response.json();
+
+        // Фільтрувати тільки бронювання поточного користувача
+        const userBookings = bookings.filter(b => b.user === currentUser._id);
+
+        if (userBookings.length === 0) {
+            bookingsList.innerHTML = '<p class="no-data">У вас поки немає бронювань</p>';
+            return;
+        }
+
+        let html = '<div class="bookings-list">';
+        userBookings.forEach(booking => {
+            html += `
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <h3>${booking.room?.name || 'Приміщення'}</h3>
+                        <span class="booking-status">✅ Підтверджено</span>
+                    </div>
+                    <div class="booking-details">
+                        <p><strong>Початок:</strong> ${formatDateTime(booking.bookedTimeSlots.from)}</p>
+                        <p><strong>Кінець:</strong> ${formatDateTime(booking.bookedTimeSlots.to)}</p>
+                        <p><strong>Кількість годин:</strong> ${booking.totalHours} год</p>
+                        <p><strong>Вартість:</strong> ${booking.totalAmount} грн</p>
+                        <p><strong>ID транзакції:</strong> ${booking.transactionId}</p>
+                        <p class="booking-date">Забронювано: ${formatDateTime(booking.createdAt)}</p>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        bookingsList.innerHTML = html;
+    } catch (error) {
+        console.error('Помилка:', error);
+        bookingsList.innerHTML = '<p class="error">Не вдалося завантажити бронювання</p>';
+    }
 }
 
 // Перевірка авторизації
