@@ -12,7 +12,11 @@ const roomBookingSchema = new mongoose.Schema({
     totalAmount : {type : Number},
     transactionId : {type : String},
     userName : {type : String},
-    userEmail : {type : String}
+    userEmail : {type : String},
+    accessCode : {type : String}, // Тимчасовий код доступу
+    lockStatus : {type : String, enum: ['pending', 'activated', 'deactivated'], default: 'pending'},
+    accessActivatedAt : {type : Date},
+    accessDeactivatedAt : {type : Date}
 
 }, {timestamps : true})
 

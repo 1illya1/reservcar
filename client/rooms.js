@@ -18,6 +18,7 @@ function setupEventListeners() {
     // Навігація
     document.getElementById('allRoomsBtn').addEventListener('click', () => showSection('roomsSection'));
     document.getElementById('myBookingsBtn').addEventListener('click', () => showSection('bookingsSection'));
+    document.getElementById('iotControlBtn').addEventListener('click', () => showSection('iotControlSection'));
     document.getElementById('addRoomBtn').addEventListener('click', () => showSection('addRoomSection'));
 
     // Фільтри
@@ -62,6 +63,10 @@ function showSection(sectionId) {
     } else if (sectionId === 'bookingsSection') {
         document.getElementById('myBookingsBtn').classList.add('active');
         loadBookings();
+    } else if (sectionId === 'iotControlSection') {
+        document.getElementById('iotControlBtn').classList.add('active');
+        loadIoTDevices();
+        loadActiveAccess();
     } else if (sectionId === 'addRoomSection') {
         document.getElementById('addRoomBtn').classList.add('active');
     }
@@ -270,7 +275,10 @@ function handleBooking() {
                 });
 
                 if (response.ok) {
-                    alert('✅ Бронювання успішне! Деталі надіслано на ваш email.');
+                    const result = await response.json();
+                    const accessCode = result.accessCode;
+
+                    alert(`✅ Бронювання успішне!\n\n🔑 Ваш код доступу: ${accessCode}\n\nДеталі надіслано на ваш email.\nКод доступу буде активовано за 15 хвилин до початку бронювання.`);
                     closeModal();
                     loadRooms(); // Оновити список приміщень
                 } else {
@@ -390,6 +398,7 @@ async function loadBookings() {
                         <p><strong>Кінець:</strong> ${formatDateTime(booking.bookedTimeSlots.to)}</p>
                         <p><strong>Кількість годин:</strong> ${booking.totalHours} год</p>
                         <p><strong>Вартість:</strong> ${booking.totalAmount} грн</p>
+                        ${booking.accessCode ? `<p><strong>🔑 Код доступу:</strong> <span style="font-family: monospace; font-size: 1.3em; color: #667eea;">${booking.accessCode}</span></p>` : ''}
                         <p><strong>ID транзакції:</strong> ${booking.transactionId}</p>
                         <p class="booking-date">Забронювано: ${formatDateTime(booking.createdAt)}</p>
                     </div>
@@ -429,5 +438,198 @@ function handleLogout() {
     }
 }
 
-// Зробити функцію доступною глобально
+// ============ IoT КОНТРОЛЬ ============
+
+// Завантаження IoT пристроїв
+async function loadIoTDevices() {
+    const devicesList = document.getElementById('devicesList');
+    devicesList.innerHTML = '<div class="loading">Завантаження пристроїв...</div>';
+
+    try {
+        const response = await fetch(`${API_URL}/iot/devices`);
+        if (!response.ok) throw new Error('Помилка завантаження пристроїв');
+
+        const devices = await response.json();
+
+        if (devices.length === 0) {
+            devicesList.innerHTML = '<p class="no-data">Немає підключених пристроїв</p>';
+            return;
+        }
+
+        let html = '';
+        devices.forEach(device => {
+            const statusColor = device.status === 'locked' ? '#28a745' : device.status === 'unlocked' ? '#ffc107' : '#6c757d';
+            const statusIcon = device.status === 'locked' ? '🔒' : device.status === 'unlocked' ? '🔓' : '⚠️';
+
+            html += `
+                <div class="device-card">
+                    <div class="device-header">
+                        <div>
+                            <h4>${device.room?.name || 'Приміщення'}</h4>
+                            <p class="device-id">ID: ${device.deviceId}</p>
+                        </div>
+                        <span class="device-status" style="background: ${statusColor}20; color: ${statusColor}">
+                            ${statusIcon} ${device.status === 'locked' ? 'Закрито' : device.status === 'unlocked' ? 'Відкрито' : 'Офлайн'}
+                        </span>
+                    </div>
+                    <div class="device-info">
+                        <p><strong>Тип:</strong> ${device.manufacturer || 'Smart Lock'}</p>
+                        <p><strong>Зв'язок:</strong> ${device.connectionType || 'WiFi'}</p>
+                        <p><strong>Батарея:</strong> ${device.batteryLevel}%</p>
+                        <p><strong>Остання активність:</strong> ${formatDateTime(device.lastActivity)}</p>
+                    </div>
+                    <div class="device-controls">
+                        <button class="control-btn lock-btn" onclick="controlLock('${device.deviceId}', 'lock')">🔒 Закрити</button>
+                        <button class="control-btn unlock-btn" onclick="controlLock('${device.deviceId}', 'unlock')">🔓 Відкрити</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        devicesList.innerHTML = html;
+    } catch (error) {
+        console.error('Помилка:', error);
+        devicesList.innerHTML = '<p class="error">Не вдалося завантажити пристрої</p>';
+    }
+}
+
+// Завантаження активних кодів доступу
+async function loadActiveAccess() {
+    const accessList = document.getElementById('accessList');
+    accessList.innerHTML = '<div class="loading">Завантаження...</div>';
+
+    try {
+        const response = await fetch(`${API_URL}/rooms/getallroomreservs`);
+        if (!response.ok) throw new Error('Помилка завантаження');
+
+        const bookings = await response.json();
+
+        // Фільтруємо тільки активні бронювання з кодами доступу
+        const now = new Date();
+        const activeBookings = bookings.filter(b => {
+            const endDate = new Date(b.bookedTimeSlots.to);
+            return endDate > now && b.accessCode && b.lockStatus !== 'deactivated';
+        });
+
+        if (activeBookings.length === 0) {
+            accessList.innerHTML = '<p class="no-data">Немає активних бронювань</p>';
+            return;
+        }
+
+        let html = '';
+        activeBookings.forEach(booking => {
+            const statusColor = booking.lockStatus === 'activated' ? '#28a745' : '#ffc107';
+            html += `
+                <div class="access-card">
+                    <div class="access-header">
+                        <h4>${booking.room?.name || 'Приміщення'}</h4>
+                        <span class="access-status" style="background: ${statusColor}20; color: ${statusColor}">
+                            ${booking.lockStatus === 'activated' ? '✅ Активовано' : '⏳ Очікування'}
+                        </span>
+                    </div>
+                    <div class="access-code-display">
+                        <div class="code-label">Код доступу:</div>
+                        <div class="code-value">${booking.accessCode}</div>
+                    </div>
+                    <div class="access-info">
+                        <p><strong>Користувач:</strong> ${booking.userName}</p>
+                        <p><strong>Період:</strong> ${formatDateTime(booking.bookedTimeSlots.from)} - ${formatDateTime(booking.bookedTimeSlots.to)}</p>
+                        ${booking.accessActivatedAt ? `<p><strong>Активовано:</strong> ${formatDateTime(booking.accessActivatedAt)}</p>` : ''}
+                    </div>
+                    <div class="access-controls">
+                        ${booking.lockStatus === 'pending' ?
+                            `<button class="control-btn activate-btn" onclick="activateAccess('${booking._id}')">🔑 Активувати зараз</button>` :
+                            `<button class="control-btn deactivate-btn" onclick="deactivateAccess('${booking._id}')">🚫 Деактивувати</button>`
+                        }
+                    </div>
+                </div>
+            `;
+        });
+
+        accessList.innerHTML = html;
+    } catch (error) {
+        console.error('Помилка:', error);
+        accessList.innerHTML = '<p class="error">Не вдалося завантажити дані</p>';
+    }
+}
+
+// Керування замком
+async function controlLock(deviceId, action) {
+    try {
+        const response = await fetch(`${API_URL}/iot/lock/control`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ deviceId, action })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            alert(`✅ Замок успішно ${action === 'lock' ? 'закрито' : 'відкрито'}!`);
+            loadIoTDevices(); // Оновити список
+        } else {
+            alert('❌ Помилка керування замком');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        alert('❌ Помилка з\'єднання з сервером');
+    }
+}
+
+// Активувати доступ
+async function activateAccess(bookingId) {
+    try {
+        const response = await fetch(`${API_URL}/iot/access/activate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ bookingId })
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            alert(`✅ Доступ активовано!\n\nКод: ${result.accessCode}`);
+            loadActiveAccess();
+            loadIoTDevices();
+        } else {
+            alert('❌ Помилка активації доступу');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        alert('❌ Помилка з\'єднання з сервером');
+    }
+}
+
+// Деактивувати доступ
+async function deactivateAccess(bookingId) {
+    if (!confirm('Деактивувати доступ до приміщення?')) return;
+
+    try {
+        const response = await fetch(`${API_URL}/iot/access/deactivate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ bookingId })
+        });
+
+        if (response.ok) {
+            alert('✅ Доступ деактивовано!');
+            loadActiveAccess();
+            loadIoTDevices();
+        } else {
+            alert('❌ Помилка деактивації доступу');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        alert('❌ Помилка з\'єднання з сервером');
+    }
+}
+
+// Зробити функції доступними глобально
 window.openRoomDetails = openRoomDetails;
+window.controlLock = controlLock;
+window.activateAccess = activateAccess;
+window.deactivateAccess = deactivateAccess;

@@ -11,6 +11,7 @@ app.use('/api/cars/' , require('./routes/carsRoute'))
 app.use('/api/users/' , require('./routes/usersRoute'))
 app.use('/api/reservs/' , require('./routes/reservsRoute'))
 app.use('/api/rooms/' , require('./routes/roomsRoute'))
+app.use('/api/iot/' , require('./routes/iotRoute'))
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'client', 'login.html')))
 
 

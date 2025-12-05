@@ -20,6 +20,7 @@
             <nav>
                 <button id="allRoomsBtn" class="nav-btn active">Всі Приміщення</button>
                 <button id="myBookingsBtn" class="nav-btn">Мої Бронювання</button>
+                <button id="iotControlBtn" class="nav-btn">🔐 IoT Контроль</button>
                 <button id="addRoomBtn" class="nav-btn admin-btn">Додати Приміщення</button>
             </nav>
         </header>
@@ -53,6 +54,25 @@
                 <h2>Мої Бронювання</h2>
                 <div id="bookingsList">
                     <!-- Бронювання будуть додані тут -->
+                </div>
+            </section>
+
+            <!-- Розділ IoT контролю -->
+            <section id="iotControlSection" class="section">
+                <h2>🔐 IoT Контроль Доступу</h2>
+                <div class="iot-container">
+                    <div class="iot-devices-panel">
+                        <h3>Розумні Замки</h3>
+                        <div id="devicesList">
+                            <!-- IoT пристрої будуть тут -->
+                        </div>
+                    </div>
+                    <div class="iot-access-panel">
+                        <h3>Активні Бронювання з Доступом</h3>
+                        <div id="accessList">
+                            <!-- Активні коди доступу будуть тут -->
+                        </div>
+                    </div>
                 </div>
             </section>
 

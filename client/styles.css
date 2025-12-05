@@ -494,6 +494,158 @@ main {
     border-top: 1px solid #f0f0f0;
 }
 
+/* IoT Control */
+.iot-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.iot-devices-panel h3,
+.iot-access-panel h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.device-card,
+.access-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.device-card:hover,
+.access-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.device-header,
+.access-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.device-header h4,
+.access-header h4 {
+    margin: 0;
+    color: #667eea;
+    font-size: 1.2em;
+}
+
+.device-id {
+    font-size: 0.85em;
+    color: #999;
+    margin: 5px 0 0 0;
+}
+
+.device-status,
+.access-status {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+}
+
+.device-info,
+.access-info {
+    margin: 15px 0;
+}
+
+.device-info p,
+.access-info p {
+    margin: 8px 0;
+    color: #555;
+}
+
+.device-controls,
+.access-controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.control-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.lock-btn {
+    background: #28a745;
+    color: white;
+}
+
+.lock-btn:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+.unlock-btn {
+    background: #ffc107;
+    color: #333;
+}
+
+.unlock-btn:hover {
+    background: #e0a800;
+    transform: scale(1.05);
+}
+
+.activate-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.activate-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+.deactivate-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.deactivate-btn:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+.access-code-display {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.code-label {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+.code-value {
+    color: white;
+    font-size: 2.5em;
+    font-weight: bold;
+    letter-spacing: 5px;
+    font-family: 'Courier New', monospace;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .header-top {
@@ -515,6 +667,10 @@ main {
     }
 
     .bookings-list {
+        grid-template-columns: 1fr;
+    }
+
+    .iot-container {
         grid-template-columns: 1fr;
     }
 
