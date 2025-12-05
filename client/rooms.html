@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Резервування Приміщень</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Система Резервування Приміщень</h1>
+            <nav>
+                <button id="allRoomsBtn" class="nav-btn active">Всі Приміщення</button>
+                <button id="myBookingsBtn" class="nav-btn">Мої Бронювання</button>
+                <button id="addRoomBtn" class="nav-btn admin-btn">Додати Приміщення</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Розділ з усіма приміщеннями -->
+            <section id="roomsSection" class="section active">
+                <div class="filters">
+                    <h2>Доступні Приміщення</h2>
+                    <div class="filter-controls">
+                        <select id="roomTypeFilter">
+                            <option value="">Всі типи</option>
+                            <option value="Конференц-зала">Конференц-зала</option>
+                            <option value="Переговорна кімната">Переговорна кімната</option>
+                            <option value="Актова зала">Актова зала</option>
+                            <option value="Спортзал">Спортзал</option>
+                            <option value="Коворкінг">Коворкінг</option>
+                        </select>
+                        <input type="number" id="capacityFilter" placeholder="Мін. місткість">
+                        <button id="applyFilters">Застосувати</button>
+                    </div>
+                </div>
+
+                <div id="roomsList" class="rooms-grid">
+                    <!-- Приміщення будуть додані тут через JavaScript -->
+                </div>
+            </section>
+
+            <!-- Розділ моїх бронювань -->
+            <section id="bookingsSection" class="section">
+                <h2>Мої Бронювання</h2>
+                <div id="bookingsList">
+                    <!-- Бронювання будуть додані тут -->
+                </div>
+            </section>
+
+            <!-- Форма додавання приміщення -->
+            <section id="addRoomSection" class="section">
+                <h2>Додати Нове Приміщення</h2>
+                <form id="addRoomForm">
+                    <div class="form-group">
+                        <label for="roomName">Назва приміщення:</label>
+                        <input type="text" id="roomName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomImg">URL зображення:</label>
+                        <input type="url" id="roomImg" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomType">Тип приміщення:</label>
+                        <select id="roomType" required>
+                            <option value="Конференц-зала">Конференц-зала</option>
+                            <option value="Переговорна кімната">Переговорна кімната</option>
+                            <option value="Актова зала">Актова зала</option>
+                            <option value="Спортзал">Спортзал</option>
+                            <option value="Коворкінг">Коворкінг</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomCapacity">Місткість (осіб):</label>
+                        <input type="number" id="roomCapacity" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="roomFloor">Поверх:</label>
+                        <input type="number" id="roomFloor" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="roomRent">Ціна за годину (грн):</label>
+                        <input type="number" id="roomRent" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="roomAmenities">Зручності:</label>
+                        <textarea id="roomAmenities" rows="3" placeholder="Проектор, WiFi, Кондиціонер..."></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Додати Приміщення</button>
+                </form>
+            </section>
+        </main>
+
+        <!-- Модальне вікно деталей приміщення -->
+        <div id="roomModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="roomDetails">
+                    <!-- Деталі приміщення будуть тут -->
+                </div>
+                <div class="booking-form">
+                    <h3>Забронювати приміщення</h3>
+                    <div class="form-group">
+                        <label for="bookingFrom">Початок:</label>
+                        <input type="datetime-local" id="bookingFrom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bookingTo">Кінець:</label>
+                        <input type="datetime-local" id="bookingTo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">Email:</label>
+                        <input type="email" id="userEmail" required>
+                    </div>
+                    <div id="totalCost" class="total-cost"></div>
+                    <button id="confirmBooking" class="submit-btn">Підтвердити Бронювання</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="rooms.js"></script>
+</body>
+</html>
